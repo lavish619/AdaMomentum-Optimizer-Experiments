@@ -10,11 +10,10 @@ def print_log(print_string, log,print_flag=True):
     log.write('{}\n'.format(print_string))
     log.flush()
 
-# RESULT_PATH = str(
-#     Path().expanduser()
-# )  # Destination folder to store the results to
+RESULT_PATH = str(
+    Path('results').expanduser()
+)  # Destination folder to store the results to
 
-RESULT_PATH = "C:\\Users\\asus\\Desktop\\AdaMomentum\\results"
 def get_result_path(dataset_name, network_arch, random_seed, result_subfolder, loss_fn_meta='',postfix=''):
     if not os.path.isdir(RESULT_PATH):
         os.makedirs(RESULT_PATH)
