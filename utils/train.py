@@ -2,14 +2,13 @@ import time
 import copy
 import torch
 from tqdm import tqdm
-from utils.utils import print_log
+from utils.utils import print_log, plot_curve, save_model
 
-def train_model(model, criterion, optimizer, dataloaders, log, scheduler = None, epochs=25, device = "cpu", ):
+def train_model(model, criterion, optimizer, dataloaders, log, result_path, scheduler = None, epochs=25, device = "cpu", ):
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0
     losses = {'train':[], 'val': [] }
     acc = {'train':[], 'val': [] }
-    not_imp = 0
 
     for epoch in range(epochs):
         print_log('Epoch {}/{}'.format(epoch, epochs - 1), log)
@@ -17,7 +16,7 @@ def train_model(model, criterion, optimizer, dataloaders, log, scheduler = None,
         
         since = time.time()
 
-        corrects = 0
+        
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
@@ -29,6 +28,7 @@ def train_model(model, criterion, optimizer, dataloaders, log, scheduler = None,
                 model.eval()   # Set model to evaluate mode
 
             epoch_samples = 0
+            corrects = 0
             
             for inputs, labels in tqdm(dataloaders[phase]):
 
@@ -71,17 +71,16 @@ def train_model(model, criterion, optimizer, dataloaders, log, scheduler = None,
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
                 print_log("best_acc {}".format(best_acc), log)
-            elif phase=='val' and epoch_acc < best_acc:
-                not_imp += 1
+           
+                # Save model
+                save_model(model, result_path)
 
-            if not_imp > 4:
-                break 
+        # Plot
+        plot_curve(losses, acc, result_path)
 
-        if not_imp > 4:
-            break        
-        
         time_elapsed = time.time() - since
         print_log('{:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60), log)
+       
 
     print_log('Best val acc: {:4f}'.format(best_acc), log)
 

@@ -102,14 +102,7 @@ def main():
     optimizer = Adamomentum(model.parameters(), lr=0.001, betas=(0.9, 0.999))
     
     # Train and evaluate
-    model, losses, acc = train_model(model, criterion, optimizer, dataloaders, log, epochs=10, device=device)
-
-    # Save model
-    save_model(model, result_path)
-
-    # Plot
-    plot_curve(losses, acc, result_path)
-
+    model, losses, acc = train_model(model, criterion, optimizer, dataloaders, log, result_path, epochs=10, device=device)
 
 if __name__ == '__main__':
     main()
