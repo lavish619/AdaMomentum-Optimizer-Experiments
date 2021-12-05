@@ -4,19 +4,16 @@ import torch
 from tqdm import tqdm
 from utils.utils import print_log, plot_curve, save_model
 
-def train_model(model, criterion, optimizer, dataloaders, log, result_path, scheduler = None, epochs=25, device = "cpu", ):
+def train_model(model, criterion, optimizer, opt_name, dataloaders, log, result_path, losses, acc, scheduler = None, epochs=25, device = "cpu", ):
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0
-    losses = {'train':[], 'val': [] }
-    acc = {'train':[], 'val': [] }
-
+    
     for epoch in range(epochs):
         print_log('Epoch {}/{}'.format(epoch, epochs - 1), log)
         print_log('-' * 10, log)
         
         since = time.time()
 
-        
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
@@ -29,6 +26,7 @@ def train_model(model, criterion, optimizer, dataloaders, log, result_path, sche
 
             epoch_samples = 0
             corrects = 0
+            running_loss= 0
             
             for inputs, labels in tqdm(dataloaders[phase]):
 
@@ -52,28 +50,27 @@ def train_model(model, criterion, optimizer, dataloaders, log, result_path, sche
                 # statistics
                 epoch_samples += inputs.size(0)
                 corrects += (labels == preds).sum().item()
-                running_loss = loss.item() * inputs.size(0) 
+                running_loss += loss.item() * inputs.size(0) 
 
             if scheduler is not None and phase=="train":
                 scheduler.step()
          
             epoch_acc = corrects /epoch_samples
-            losses[phase].append(running_loss / epoch_samples)
-            acc[phase].append(epoch_acc)
+            losses[phase][opt_name].append(running_loss / epoch_samples)
+            acc[phase][opt_name].append(epoch_acc)
             
             print_log('{} Loss: {:.4f} Acc: {:.4f}'.format(
                 phase, running_loss / epoch_samples, epoch_acc), log)
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
-                not_imp=0
                 print_log("saving best model", log)
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
                 print_log("best_acc {}".format(best_acc), log)
            
                 # Save model
-                save_model(model, result_path)
+                # save_model(model, result_path, opt_name, log)
 
         # Plot
         plot_curve(losses, acc, result_path)
